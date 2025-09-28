@@ -1,82 +1,266 @@
 body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f9fafb;
-    color: #374151;
+  font-family: "Inter", sans-serif;
+  background-color: #f9fafb;
+  color: #374151;
 }
 
+/*   Цвета темы   */
+.thems {
+  color: #304f6c;
+}
+.title-color {
+  color: #2b4a67;
+}
+.topics-title {
+  color: #304f6c;
+}
+.bg-them {
+  background-color: #92b0ca;
+}
+.accent-color {
+  color: #e9eef1;
+}
+
+/*   Кнопки   */
+.button {
+  background-color: #43668c;
+  color: #e9eef1;
+  transition: background-color 0.2s;
+  border: 2px solid #45658b;
+  border-radius: 0.375rem;
+}
+.button.active {
+  background-color: #304f6c;
+  color: #a0a1a6;
+}
+.button:hover {
+  background-color: #304f6c;
+  border-color: #2b4a67;
+  color: #a0a1a6;
+}
+
+/* Кнопка отмены */
+.cancel-button {
+  background-color: #754c36;
+  color: #b6a089;
+  border: 2px solid #754c36;
+}
+.cancel-button:hover {
+  background-color: #543521;
+  color: #795835;
+  border: 2px solid #372517;
+}
+
+/* Выпадающий список */
+.select-button-style {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #e9eef1;
+  background-color: #43668c;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+/* Кнопка открепления */
+.detach-button {
+  background-color: #754c36;
+  color: #b6a089;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+  border: 2px solid #754c36;
+}
+.detach-button:hover {
+  background-color: #543521;
+  color: #795835;
+  border: 2px solid #372517;
+}
+
+/* Кнопка скачивания */
+.download-button {
+  background-color: #506e52;
+  color: #98ab98;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+  border: 2px solid #506e52;
+}
+.download-button:hover {
+  background-color: #365941;
+  color: #648067;
+  border-color: #39473a;
+}
+
+/* Легенда графика */
+#custom-trends-legend {
+  background-image: url("./images/parchment.jpg");
+  background-size: cover;
+  background-position: center;
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+/*   Тексты   */
+.text-muted {
+  color: #5b6f76;
+}
+.icon-muted {
+  color: #5b6f76;
+}
+.subtitle {
+  color: #374151;
+}
+.counter-text {
+  color: #111827;
+}
+.error-box {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.reviews-error-text {
+  color: #b91c1c;
+}
+
+/* Поля ввода */
+.input-field {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+}
+.input-file {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  width: 100%;
+}
+.select-input {
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  font-size: 0.875rem;
+}
+
+/*   Карточки   */
 .topic-card {
-    padding: 1rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
+  padding: 1rem;
+  border: 2px solid #45658b;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
 }
-
 .topic-card:hover {
-    border-color: #3b82f6;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.topic-card.active {
-    background-color: #eff6ff;
-    border-color: #60a5fa;
+/*   Карточки статистики   */
+.sentiment-card {
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-
-#statistics-content, #trends-content {
-    padding: 1rem;
-    background: #ffffff;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.progress-bar {
-    height: 1rem;
-    border-radius: 0.25rem;
-    background-color: #e5e7eb;
-    overflow: hidden;
-    margin-bottom: 0.5rem;
-}
-
-.progress-bar-inner {
-    height: 100%;
-    text-align: right;
-    padding-right: 0.5rem;
-    color: white;
-    font-weight: bold;
-}
-
 .sentiment-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
 }
-
-.topic-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+.positive-card {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+.neutral-card {
+  background-color: #fef9c3;
+  color: #854d0e;
+}
+.negative-card {
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
+/* Прогресс-бары */
+.progress-bg {
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  height: 0.625rem;
+}
+.progress-fill {
+  height: 0.625rem;
+  border-radius: 9999px;
+}
+.positive-bar {
+  background-color: #10b981;
+}
+.neutral-bar {
+  background-color: #f59e0b;
+}
+.negative-bar {
+  background-color: #ef4444;
+}
+.percent-text {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/*   Контейнер графиков   */
 .chart-container {
   position: relative;
   height: 300px;
   width: 100%;
+  background-image: url("./images/parchment.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 0.5rem;
+  padding: 2rem;
 }
 
+/* Подпись под графиком */
+.chart-footer {
+  background-color: #43668c;
+  border: 1px solid #43668c;
+  color: #e9eef1;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  width: max-content;
+  height: 35px;
+  margin-top: 1rem;
+}
+
+/*   Пагинация   */
+.pagination-btn {
+  padding: 0.25rem 0.75rem;
+  background: #a0a1a6;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s;
+}
+.pagination-btn:hover {
+  background: #8e8f94;
+}
+.pagination-info {
+  font-weight: 500;
+  padding: 0.25rem 0.75rem;
+}
+
+/*   Индикатор загрузки   */
 .loader {
   border-top-color: #3b82f6;
-  -webkit-animation: spinner 1.5s linear infinite;
   animation: spinner 1.5s linear infinite;
 }
-
-@-webkit-keyframes spinner {
-  0% { -webkit-transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); }
-}
-
 @keyframes spinner {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
+/*   Утилиты   */
 .hidden {
   display: none !important;
 }
