@@ -14,8 +14,6 @@ services:
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.le.acme.httpchallenge=true
       - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
-      - --accesslog=true
-      - --log.level=INFO
     ports:
       - "80:80"
       - "443:443"
@@ -28,13 +26,11 @@ services:
       - traefik.http.routers.traefik.rule=Host(`${DOMAIN}`) && PathPrefix(`/traefik`)
       - traefik.http.routers.traefik.entrypoints=websecure
       - traefik.http.routers.traefik.tls.certresolver=le
+      - traefik.http.routers.traefik.priority=1000
       - traefik.http.routers.traefik.service=api@internal
       - traefik.http.routers.traefik.middlewares=traefik-auth,traefik-strip
       - traefik.http.middlewares.traefik-auth.basicauth.usersfile=/auth/.htpasswd
       - traefik.http.middlewares.traefik-strip.stripprefix.prefixes=/traefik
-      - traefik.http.routers.traefik.priority=100
-    networks: [ web ]
-    restart: unless-stopped
 
   backend:
     build:
@@ -86,8 +82,6 @@ services:
       - traefik.http.routers.prom.tls.certresolver=le
       - traefik.http.services.prom.loadbalancer.server.port=9090
       - traefik.http.routers.prom.priority=50
-    networks: [ web ]
-    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -107,8 +101,6 @@ services:
       - traefik.http.routers.grafana.tls.certresolver=le
       - traefik.http.services.grafana.loadbalancer.server.port=3000
       - traefik.http.routers.grafana.priority=50
-    networks: [ web ]
-    restart: unless-stopped
 
 networks:
   web:
