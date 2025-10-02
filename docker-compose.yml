@@ -1,15 +1,15 @@
 services:
   traefik:
     image: traefik:v2.10
-    container_name: traefik
     command:
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
       - --entrypoints.websecure.address=:443
       - --api.dashboard=true
       - --metrics.prometheus=true
-      # Let's Encrypt (HTTP-01)
       - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.le.acme.httpchallenge=true
@@ -22,35 +22,35 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-letsencrypt:/letsencrypt
+      - ./traefik/auth/.htpasswd:/auth/.htpasswd:ro
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.${DOMAIN}`)"
-      - "traefik.http.routers.traefik.entrypoints=websecure"
-      - "traefik.http.routers.traefik.tls.certresolver=le"
-      - "traefik.http.routers.traefik.service=api@internal"
-      - "traefik.http.routers.traefik.middlewares=traefik-auth"
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIK_BASIC_AUTH}"
-    networks:
-      - web
+      - traefik.enable=true
+      # Dashboard по пути /traefik (с BasicAuth + strip префикса)
+      - traefik.http.routers.traefik.rule=Host(`${DOMAIN}`) && PathPrefix(`/traefik`)
+      - traefik.http.routers.traefik.entrypoints=websecure
+      - traefik.http.routers.traefik.tls.certresolver=le
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.middlewares=traefik-auth,traefik-strip
+      - traefik.http.middlewares.traefik-auth.basicauth.usersfile=/auth/.htpasswd
+      - traefik.http.middlewares.traefik-strip.stripprefix.prefixes=/traefik
+    networks: [web]
     restart: unless-stopped
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: backend
     environment:
       - MODEL_URL=http://model:8000
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`backend.${DOMAIN}`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=le"
-      - "traefik.http.services.backend.loadbalancer.server.port=8080"
-    depends_on:
-      - model
-    networks:
-      - web
+      - traefik.enable=true
+      - traefik.http.routers.front.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.front.entrypoints=websecure
+      - traefik.http.routers.front.tls.certresolver=le
+      - traefik.http.services.front.loadbalancer.server.port=8080
+      - traefik.http.routers.front.priority=1
+    depends_on: [ model ]
+    networks: [ web ]
     restart: unless-stopped
 
 
@@ -58,55 +58,59 @@ services:
     build:
       context: ./model
       dockerfile: Dockerfile
-    container_name: model
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.model.rule=Host(`model.${DOMAIN}`)"
-      - "traefik.http.routers.model.entrypoints=websecure"
-      - "traefik.http.routers.model.tls.certresolver=le"
-      - "traefik.http.services.model.loadbalancer.server.port=8000"
-    networks:
-      - web
+      - traefik.enable=true
+      - traefik.http.routers.model.rule=Host(`${DOMAIN}`) && PathPrefix(`/model`)
+      - traefik.http.routers.model.entrypoints=websecure
+      - traefik.http.routers.model.tls.certresolver=le
+      - traefik.http.routers.model.middlewares=model-strip
+      - traefik.http.middlewares.model-strip.stripprefix.prefixes=/model
+      - traefik.http.services.model.loadbalancer.server.port=8000
+      - traefik.http.routers.model.priority=10
+    networks: [web]
     restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
-    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.external-url=https://${DOMAIN}/prometheus
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.prom.rule=Host(`prometheus.${DOMAIN}`)"
-      - "traefik.http.routers.prom.entrypoints=websecure"
-      - "traefik.http.routers.prom.tls.certresolver=le"
-      # (опц.) защитить базовой авторизацией
-      # - "traefik.http.routers.prom.middlewares=traefik-auth"
-      - "traefik.http.services.prom.loadbalancer.server.port=9090"
-    networks:
-      - web
+      - traefik.enable=true
+      - traefik.http.routers.prom.rule=Host(`${DOMAIN}`) && PathPrefix(`/prometheus`)
+      - traefik.http.routers.prom.entrypoints=websecure
+      - traefik.http.routers.prom.tls.certresolver=le
+      - traefik.http.routers.prom.middlewares=prom-strip
+      - traefik.http.middlewares.prom-strip.stripprefix.prefixes=/prometheus
+      - traefik.http.services.prom.loadbalancer.server.port=9090
+      - traefik.http.routers.prom.priority=10
+    networks: [web]
     restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_SERVER_DOMAIN=grafana.${DOMAIN}
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/
+      - GF_SERVER_DOMAIN=${DOMAIN}
+      - GF_SERVER_ROOT_URL=https://${DOMAIN}/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - grafana-storage:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN}`)"
-      - "traefik.http.routers.grafana.entrypoints=websecure"
-      - "traefik.http.routers.grafana.tls.certresolver=le"
-      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
-    networks:
-      - web
+      - traefik.enable=true
+      - traefik.http.routers.grafana.rule=Host(`${DOMAIN}`) && PathPrefix(`/grafana`)
+      - traefik.http.routers.grafana.entrypoints=websecure
+      - traefik.http.routers.grafana.tls.certresolver=le
+      - traefik.http.routers.grafana.middlewares=grafana-strip
+      - traefik.http.middlewares.grafana-strip.stripprefix.prefixes=/grafana
+      - traefik.http.services.grafana.loadbalancer.server.port=3000
+      - traefik.http.routers.grafana.priority=10
+    networks: [web]
     restart: unless-stopped
 
 networks:
