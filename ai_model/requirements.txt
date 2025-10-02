@@ -1,8 +1,0 @@
-pandas
-numpy
-scikit-learn
-joblib
-torch
-onnx
-onnxruntime
-transformers
