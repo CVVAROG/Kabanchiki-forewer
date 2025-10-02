@@ -25,7 +25,6 @@ services:
       - ./traefik/auth/.htpasswd:/auth/.htpasswd:ro
     labels:
       - traefik.enable=true
-      # Dashboard по пути /traefik (с BasicAuth + strip префикса)
       - traefik.http.routers.traefik.rule=Host(`${DOMAIN}`) && PathPrefix(`/traefik`)
       - traefik.http.routers.traefik.entrypoints=websecure
       - traefik.http.routers.traefik.tls.certresolver=le
@@ -33,7 +32,8 @@ services:
       - traefik.http.routers.traefik.middlewares=traefik-auth,traefik-strip
       - traefik.http.middlewares.traefik-auth.basicauth.usersfile=/auth/.htpasswd
       - traefik.http.middlewares.traefik-strip.stripprefix.prefixes=/traefik
-    networks: [web]
+      - traefik.http.routers.traefik.priority=100
+    networks: [ web ]
     restart: unless-stopped
 
   backend:
@@ -75,6 +75,7 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --web.external-url=https://${DOMAIN}/prometheus
+      - --web.route-prefix=/prometheus
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -83,11 +84,9 @@ services:
       - traefik.http.routers.prom.rule=Host(`${DOMAIN}`) && PathPrefix(`/prometheus`)
       - traefik.http.routers.prom.entrypoints=websecure
       - traefik.http.routers.prom.tls.certresolver=le
-      - traefik.http.routers.prom.middlewares=prom-strip
-      - traefik.http.middlewares.prom-strip.stripprefix.prefixes=/prometheus
       - traefik.http.services.prom.loadbalancer.server.port=9090
-      - traefik.http.routers.prom.priority=10
-    networks: [web]
+      - traefik.http.routers.prom.priority=50
+    networks: [ web ]
     restart: unless-stopped
 
   grafana:
@@ -106,11 +105,9 @@ services:
       - traefik.http.routers.grafana.rule=Host(`${DOMAIN}`) && PathPrefix(`/grafana`)
       - traefik.http.routers.grafana.entrypoints=websecure
       - traefik.http.routers.grafana.tls.certresolver=le
-      - traefik.http.routers.grafana.middlewares=grafana-strip
-      - traefik.http.middlewares.grafana-strip.stripprefix.prefixes=/grafana
       - traefik.http.services.grafana.loadbalancer.server.port=3000
-      - traefik.http.routers.grafana.priority=10
-    networks: [web]
+      - traefik.http.routers.grafana.priority=50
+    networks: [ web ]
     restart: unless-stopped
 
 networks:
