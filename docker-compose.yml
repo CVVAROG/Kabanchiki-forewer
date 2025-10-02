@@ -14,6 +14,8 @@ services:
       - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.le.acme.httpchallenge=true
       - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      - --accesslog=true
+      - --log.level=INFO
     ports:
       - "80:80"
       - "443:443"
@@ -31,6 +33,8 @@ services:
       - traefik.http.routers.traefik.middlewares=traefik-auth,traefik-strip
       - traefik.http.middlewares.traefik-auth.basicauth.usersfile=/auth/.htpasswd
       - traefik.http.middlewares.traefik-strip.stripprefix.prefixes=/traefik
+    networks: [web]
+    restart: unless-stopped
 
   backend:
     build:
@@ -40,15 +44,15 @@ services:
       - MODEL_URL=http://model:8000
     labels:
       - traefik.enable=true
+      # Весь домен идёт на бэкенд, кроме путей ниже (/model, /prometheus, /grafana, /traefik)
       - traefik.http.routers.front.rule=Host(`${DOMAIN}`)
       - traefik.http.routers.front.entrypoints=websecure
       - traefik.http.routers.front.tls.certresolver=le
       - traefik.http.services.front.loadbalancer.server.port=8080
       - traefik.http.routers.front.priority=1
-    depends_on: [ model ]
-    networks: [ web ]
+    depends_on: [model]
+    networks: [web]
     restart: unless-stopped
-
 
   model:
     build:
@@ -56,13 +60,14 @@ services:
       dockerfile: Dockerfile
     labels:
       - traefik.enable=true
+      # Модель доступна по https://<DOMAIN>/model/...
       - traefik.http.routers.model.rule=Host(`${DOMAIN}`) && PathPrefix(`/model`)
       - traefik.http.routers.model.entrypoints=websecure
       - traefik.http.routers.model.tls.certresolver=le
       - traefik.http.routers.model.middlewares=model-strip
       - traefik.http.middlewares.model-strip.stripprefix.prefixes=/model
       - traefik.http.services.model.loadbalancer.server.port=8000
-      - traefik.http.routers.model.priority=10
+      - traefik.http.routers.model.priority=50
     networks: [web]
     restart: unless-stopped
 
@@ -82,6 +87,8 @@ services:
       - traefik.http.routers.prom.tls.certresolver=le
       - traefik.http.services.prom.loadbalancer.server.port=9090
       - traefik.http.routers.prom.priority=50
+    networks: [web]
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana:latest
@@ -101,6 +108,8 @@ services:
       - traefik.http.routers.grafana.tls.certresolver=le
       - traefik.http.services.grafana.loadbalancer.server.port=3000
       - traefik.http.routers.grafana.priority=50
+    networks: [web]
+    restart: unless-stopped
 
 networks:
   web:
