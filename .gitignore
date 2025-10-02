@@ -1,2 +1,3 @@
 .env
 model/final_model_opset19.onnx
+.idea
